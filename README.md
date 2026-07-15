@@ -2,16 +2,16 @@
 
 # 🩸 Active Directory Enumeration Lab – BloodHound & SharpHound
 
-### Attack Path Discovery · Nested Group Misconfiguration · Privilege Escalation · Remediation
+### Attack Path Discovery · Nested Group Misconfiguration · Privilege Creep · Remediation · Validation
 
 ![Domain](https://img.shields.io/badge/Type-AD%20Enumeration%20%26%20Attack%20Path%20Analysis-purple?style=for-the-badge)
 ![Tool](https://img.shields.io/badge/Tool-BloodHound%20%7C%20SharpHound-red?style=for-the-badge)
-![Status](https://img.shields.io/badge/Finding-Privilege%20Escalation%20Path%20Resolved-brightgreen?style=for-the-badge)
 
 <img src="https://img.shields.io/badge/Domain-biksec.com-blue?style=flat-square" />
 <img src="https://img.shields.io/badge/Finding-Nested%20Group%20Privilege%20Creep-red?style=flat-square" />
 <img src="https://img.shields.io/badge/Severity-High-critical?style=flat-square" />
 <img src="https://img.shields.io/badge/MITRE-T1069%20%7C%20T1078%20%7C%20T1484-orange?style=flat-square" />
+<img src="https://img.shields.io/badge/Remediation-Nested%20Memberships%20Removed-blue?style=flat-square" />
 <img src="https://img.shields.io/badge/Validation-Attack%20Path%20Removed-brightgreen?style=flat-square" />
 
 ---
@@ -34,30 +34,21 @@
 
 ## 📋 Overview
 
-This lab demonstrates Active Directory enumeration and attack path analysis using **BloodHound** and **SharpHound** — the same tools used by penetration testers and red teams to identify privilege escalation paths within Active Directory environments.
+This lab covers Active Directory enumeration and attack path analysis using **BloodHound** and **SharpHound** — completing a full cycle of collection, analysis, finding documentation, remediation, and validation.
 
-The lab follows a complete offensive-to-defensive cycle:
+**SharpHound** was run on the Windows domain controller to collect AD relationship data. **BloodHound** was installed on Kali Linux to ingest that data, build a graph in Neo4j, and visualise attack paths across the domain.
 
-* 🔍 **Enumerate** — SharpHound collected comprehensive AD data from the biksec.com domain
-* 📊 **Analyse** — BloodHound visualised domain relationships and attack paths using graph analysis
-* ⚙️ **Simulate** — A nested group misconfiguration was deliberately introduced to create a privilege escalation path
-* 🚨 **Discover** — BloodHound identified Braya's indirect path to Server Admins through nested group membership
-* 📋 **Document** — Finding documented as High-severity privilege creep
-* 🔧 **Remediate** — Excessive nested group memberships removed
-* ✅ **Validate** — SharpHound re-run confirms attack path no longer exists
-
-> **Note:** BloodHound and SharpHound are legitimate security tools used by AD administrators and penetration testers to identify attack paths before attackers do. All testing was performed in an authorized, privately-owned lab environment (biksec.com domain).
+A nested group misconfiguration was deliberately introduced — a common real-world AD security gap where a low-privileged user (Braya) inherits Server Admins access through a chain of three group memberships. BloodHound surfaced the privilege escalation path immediately in a graph that is completely invisible in standard AD tools. The finding was documented, remediated, and confirmed resolved through a final SharpHound collection and re-import.
 
 ---
 
 ## 🛠️ Technologies Used
 
-* BloodHound (SpecterOps)
-* SharpHound v2.13.0
+* SharpHound v2.13.0 (Windows — AD data collection)
+* BloodHound — SpecterOps (Kali Linux — graph analysis)
 * Neo4j 4.4.26 (graph database backend)
 * Kali Linux (analysis machine)
-* Windows Server 2022 (BIKSEC-DC01)
-* Active Directory (biksec.com domain)
+* Windows Server 2022 — BIKSEC-DC01 (biksec.com domain)
 * SCP / SSH (data transfer)
 * Cypher Query Language
 
@@ -68,199 +59,211 @@ The lab follows a complete offensive-to-defensive cycle:
 | Component | Value |
 | --- | --- |
 | Domain | biksec.com |
-| Domain Controller | BIKSEC-DC01 (Windows Server 2022) |
-| Analysis Machine | BIKSEC-LINUX (Kali Linux — 192.168.219.30) |
-| SharpHound Version | v2.13.0 (Windows x86) |
-| BloodHound | SpecterOps BloodHound (Kali package) |
-| Graph Database | Neo4j 4.4.26 |
+| Domain Controller | BIKSEC-DC01 — Windows Server 2022 |
+| Analysis Machine | Kali Linux (192.168.219.30) |
+| SharpHound | v2.13.0 — run on Windows domain controller |
+| BloodHound | SpecterOps — installed on Kali Linux |
+| Graph Database | Neo4j 4.4.26 on Kali Linux |
 | Target User | Braya (Bimal Raya) — low-privileged domain user |
 
 ---
 
-## 🌐 Lab Architecture
+## 🌐 Architecture
 
 ```
 [BIKSEC-DC01 — Windows Server 2022]
-  Active Directory — biksec.com
+  biksec.com Active Directory
          │
          │  SharpHound.exe -c All
          │  Collects: Users, Groups, ACLs, Sessions, GPOs, Trusts
-         ▼
-  BloodHound ZIP → SCP transfer
+         │  Output: 20260712222836_BloodHound.zip
          │
+         │  SCP → kali@192.168.219.30:/home/kali/Desktop/
          ▼
-[BIKSEC-LINUX — Kali Linux 192.168.219.30]
+[Kali Linux — 192.168.219.30]
   Neo4j 4.4.26 (graph database)
-  BloodHound UI (http://127.0.0.1:8080)
+  BloodHound UI → http://127.0.0.1:8080
          │
-         │  Import ZIP → Graph Analysis
-         │  Cypher Queries
+         │  Import ZIP → Build graph → Cypher queries
          ▼
-  Attack Path Discovered:
-  Braya → HelpDesk Team → IT Operations → Server Admins
+  Finding: Braya → HelpDesk Team → IT Operations → Server Admins
          │
+         │  Remediate → Re-run SharpHound → Re-import
          ▼
-  Remediation → SharpHound re-run → Path confirmed removed
+  Validation: Attack path no longer present ✅
 ```
 
 ---
 
 ## 🔬 Lab Phases
 
-### Phase 1 — Tool Setup
+### Phase 1 — SharpHound Data Collection (Windows)
 
-- Downloaded BloodHound and SharpHound from SpecterOps GitHub
-- Temporarily disabled Windows Defender real-time protection to allow offensive tool download (standard lab procedure)
-- Ran SharpHound on Windows DC to collect AD data
-- Set up SSH on Kali Linux for file transfer
+SharpHound was downloaded on the Windows domain controller. Windows Defender real-time protection and SmartScreen were temporarily disabled to allow the download.
 
-### Phase 2 — Data Transfer
+SharpHound was run to collect AD data:
+
+```powershell
+SharpHound.exe -c All
+# Output: 20260712222836_BloodHound.zip
+```
+
+SharpHound collects: all users, computers, groups, nested group memberships, ACL permissions, GPO links, OU structure, active sessions, and domain trusts — packaged into a ZIP ready for BloodHound.
+
+---
+
+### Phase 2 — Transfer to Kali Linux
+
+SSH was configured on Kali to receive the file:
 
 ```bash
-# On Kali — enable SSH
 sudo apt-get install ssh
 sudo systemctl enable ssh
 sudo systemctl start ssh
 ```
 
-```powershell
-# On Windows DC — transfer SharpHound ZIP to Kali
-scp "C:\Users\Administrator\Downloads\SharpHound_v2.13.0_windows_x86\20260712222836_BloodHound.zip" kali@192.168.219.30:/home/kali/Desktop/
-```
-
-Transfer result: `20260712222836_BloodHound.zip 100% 31KB 1.9MB/s`
-
-### Phase 3 — BloodHound Setup
+SharpHound ZIP transferred from Windows to Kali:
 
 ```bash
-# Start Neo4j database
+scp "C:\Users\Administrator\Downloads\20260712222836_BloodHound.zip" kali@192.168.219.30:/home/kali/Desktop/
+# 20260712222836_BloodHound.zip 100% 31KB 1.9MB/s
+```
+
+---
+
+### Phase 3 — BloodHound Setup on Kali
+
+```bash
+# Start Neo4j graph database
 sudo neo4j console
+# Listening on localhost:7474 (HTTP) and localhost:7687 (Bolt)
 
 # Start BloodHound
 sudo bloodhound-start
 # Web UI: http://127.0.0.1:8080
 ```
 
-### Phase 4 — Initial AD Enumeration
-
-**Query 1 — All Domain Admin Members:**
-```cypher
-MATCH p = (t:Group)<-[:MemberOf*1..]-(a)
-WHERE (a:User or a:Computer) and t.objectid ENDS WITH '-512'
-RETURN p
-LIMIT 1000
-```
-
-**Query 2 — OU Structure:**
-```cypher
-MATCH p = (:Domain)-[:Contains*1..]->(:OU)
-RETURN p
-LIMIT 1000
+BloodHound configuration file updated with Neo4j credentials:
+```bash
+sudo nano /etc/bhapi/bhapi.json
 ```
 
 ---
 
-## ⚠️ Phase 5 — Nested Group Misconfiguration
+### Phase 4 — Initial Domain Enumeration
 
-A nested group misconfiguration was deliberately configured to simulate a real-world privilege creep scenario:
+SharpHound ZIP imported into BloodHound. Cypher queries run to explore the domain:
 
-**Groups created in biksec.com:**
-- HelpDesk Team
-- IT Operations
-- Server Admins
+**All Domain Admin members (including nested):**
+```cypher
+MATCH p = (t:Group)<-[:MemberOf*1..]-(a)
+WHERE (a:User or a:Computer) and t.objectid ENDS WITH '-512'
+RETURN p LIMIT 1000
+```
 
-**User created:** Bimal Raya (logon: `Braya`) — intended as a low-privileged HelpDesk user
+**OU structure:**
+```cypher
+MATCH p = (:Domain)-[:Contains*1..]->(:OU)
+RETURN p LIMIT 1000
+```
+
+---
+
+### Phase 5 — Nested Group Misconfiguration
+
+A nested group misconfiguration was introduced in biksec.com to simulate real-world privilege creep:
+
+**Groups created:** HelpDesk Team · IT Operations · Server Admins (in a Groups OU)
+
+**User created:** Bimal Raya (`Braya`) — intended as a low-privileged HelpDesk user
 
 **Misconfigured chain:**
 ```
 Braya
-  └─ MemberOf ─→ HelpDesk Team
-                    └─ MemberOf ─→ IT Operations
-                                      └─ MemberOf ─→ Server Admins
+  └─ MemberOf → HelpDesk Team
+                  └─ MemberOf → IT Operations
+                                  └─ MemberOf → Server Admins
 ```
 
-**Effect:** Braya inherits Server Admins permissions through nested membership — without any direct assignment.
+Braya has no direct Server Admins assignment — but inherits full permissions through a 3-hop chain.
 
 ---
 
-## 🚨 Phase 6 — Attack Path Discovered
+### Phase 6 — Attack Path Discovered
 
-After re-running SharpHound and importing updated data into BloodHound:
+SharpHound re-run after misconfiguration, ZIP transferred to Kali and imported into BloodHound.
 
 ### Finding: Excessive Privilege Through Nested Group Membership
 
-| Property | Detail |
-| --- | --- |
+| | |
+|--|--|
 | **Finding** | Excessive Privilege Through Nested Group Membership (Privilege Creep) |
 | **Severity** | 🔴 High |
 | **Attack Path** | `Braya → HelpDesk Team → IT Operations → Server Admins` |
-| **MITRE** | T1069 Permission Groups Discovery \| T1078 Valid Accounts \| T1484 Domain Policy Modification |
-
-**Risk:** Braya is not directly assigned to Server Admins, but inherits all its permissions through nested group membership. A compromised HelpDesk account could escalate privileges to Server Admins without any explicit administrative assignment — a classic privilege creep scenario invisible in standard AD tools but immediately visible in BloodHound.
+| **Risk** | A compromised HelpDesk account gains Server Admins access through nested membership — with no direct assignment visible on the user. Completely invisible in standard AD tools, immediately apparent in BloodHound. |
+| **MITRE** | T1069 Permission Groups Discovery · T1078 Valid Accounts · T1484 Domain Policy Modification |
 
 ---
 
-## 🔧 Phase 7 — Remediation
+### Phase 7 — Remediation
 
-The excessive privilege path was remediated by removing unnecessary nested memberships:
+Excessive nested memberships removed — principle of least privilege applied:
 
 | Action | Result |
 | --- | --- |
-| Removed HelpDesk Team from IT Operations | Chain broken at first hop |
-| Removed IT Operations from Server Admins | Chain broken at second hop |
+| Removed HelpDesk Team from IT Operations | First hop in chain broken |
+| Removed IT Operations from Server Admins | Second hop in chain broken |
 | Retained Braya in HelpDesk Team | Legitimate role access preserved |
 
-**Result:** `Braya → HelpDesk Team` only — no path to Server Admins.
-
-> In a real enterprise, this change would go through a change management process. BloodHound's "Shortest Paths to Domain Admins" and "Find All Paths from Domain Users to High Value Targets" queries are used to identify all similar nested group chains across the domain.
+**Result:** `Braya → HelpDesk Team` only. No path to Server Admins.
 
 ---
 
-## ✅ Phase 8 — Validation
+### Phase 8 — Validation
+
+SharpHound re-run after remediation:
 
 ```powershell
-# Re-run SharpHound after remediation
 SharpHound.exe -c All
 ```
 
-After importing the updated ZIP into BloodHound:
+Updated ZIP imported into BloodHound.
 
-✅ **Braya's MemberOf shows HelpDesk Team only**
-✅ **No path to Server Admins exists**
-✅ **Privilege escalation path confirmed removed**
+✅ Braya's node shows HelpDesk Team membership only
+✅ No path to Server Admins exists in the graph
+✅ Privilege escalation path confirmed removed
 
 ---
 
-## 🎯 MITRE ATT&CK Techniques
+## 🎯 MITRE ATT&CK
 
 | Technique | Name | Relevance |
 | --- | --- | --- |
 | T1069 | Permission Groups Discovery | BloodHound enumerates all group memberships and effective permissions |
-| T1078 | Valid Accounts | A low-privileged account (Braya) gains elevated access through inheritance |
-| T1484 | Domain Policy Modification | Nested group memberships effectively modify the privilege structure |
+| T1078 | Valid Accounts | Low-privileged account (Braya) gains elevated access through inheritance |
+| T1484 | Domain Policy Modification | Nested group memberships create unintended privilege structure |
 
 ---
 
 ## 🎯 Skills Demonstrated
 
-* Active Directory Enumeration (BloodHound / SharpHound)
-* Graph-Based Attack Path Analysis
+* SharpHound AD Data Collection
+* BloodHound Graph Analysis & Attack Path Visualisation
 * Cypher Query Language (Neo4j)
-* Privilege Escalation Path Identification
+* Privilege Escalation Path Discovery
 * Nested Group Misconfiguration Analysis
-* Privilege Creep Detection
-* SSH Configuration & SCP File Transfer
+* Privilege Creep Identification & Documentation
+* SSH Configuration & SCP File Transfer (Kali Linux)
 * Active Directory Group Management
 * Principle of Least Privilege Application
 * MITRE ATT&CK Technique Mapping
-* Security Finding Documentation
 * Remediation & Validation Cycle
 
 ---
 
 ## 🎯 Key Takeaway
 
-> This lab demonstrates end-to-end Active Directory security assessment using BloodHound and SharpHound — covering the full cycle of enumeration, attack path discovery, finding documentation, remediation, and validation. A nested group misconfiguration created a privilege escalation path that was invisible in standard AD tools but immediately apparent in BloodHound's graph analysis. The same assess-document-remediate-validate cycle is used by penetration testers and AD security analysts performing enterprise Active Directory assessments.
+> SharpHound collected AD data from biksec.com and BloodHound rendered the domain relationships as an attack graph on Kali Linux. A nested group misconfiguration gave a low-privileged user indirect Server Admins access through a 3-hop chain — invisible in standard AD tools, immediately visible in BloodHound. The finding was documented as High severity, remediated by removing the excessive group memberships, and validated through a final SharpHound collection confirming the path is gone. This is the same workflow used by penetration testers and AD security engineers to find and fix privilege escalation paths in enterprise environments.
 
 ---
 
@@ -268,8 +271,8 @@ After importing the updated ZIP into BloodHound:
 
 > Part of the **Bikash Security Lab** series:
 > * [System Hardening Lab — Linux, Windows Server & AD](https://github.com/Bikash-Raya/system-hardening-lab-linux-windows-active-directory)
-> * [Nessus Vulnerability Management Lab](https://github.com/Bikash-Raya/Nessus-Vulnerability-Management-Lab)
 > * [Microsoft Sentinel & Defender XDR — SOC IR Lab](https://github.com/Bikash-Raya/Sentinel-Defender-XDR-SOC-Incident-Response-lab)
+> * [Nessus Vulnerability Management Lab](https://github.com/Bikash-Raya/Nessus-Vulnerability-Management-Lab)
 
 ---
 
