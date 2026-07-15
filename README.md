@@ -27,7 +27,7 @@
 
 | File | Description |
 | --- | --- |
-| [AD_Enumeration_BloodHound_SharpHound_Lab_Report.docx](./AD_Enumeration_BloodHound_SharpHound_Lab_Report.docx) | Complete lab report with all screenshots embedded |
+| [AD_Enumeration_BloodHound_SharpHound_Lab_Report.pdf](./AD_Enumeration_BloodHound_SharpHound_Lab_Report.pdf) | Complete lab report with all screenshots embedded |
 | README.md | Project overview |
 
 ---
