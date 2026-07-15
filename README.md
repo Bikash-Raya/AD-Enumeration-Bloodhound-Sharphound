@@ -15,16 +15,19 @@
 <img src="https://img.shields.io/badge/Validation-Attack%20Path%20Removed-brightgreen?style=flat-square" />
 
 ---
-## 📄 Full Lab Walkthrough — Proof of Work
-
-| File | Description |
-| --- | --- |
-| [AD_Enumeration_BloodHound_SharpHound_Lab_Report.docx](./AD_Enumeration_BloodHound_SharpHound_Lab_Report.docx) | Hands-on lab walkthrough with screenshots |
 
 **Prepared by:** Bikash Raya
 
-
 </div>
+
+---
+## 📁 Full Lab Walkthrough — Proof of Work
+
+| File | Description |
+| --- | --- |
+| [AD_Enumeration_BloodHound_SharpHound_Lab_Report.docx](./AD_Enumeration_BloodHound_SharpHound_Lab_Report.docx) | Complete lab report with all screenshots embedded |
+
+
 
 ---
 
