@@ -15,22 +15,20 @@
 <img src="https://img.shields.io/badge/Validation-Attack%20Path%20Removed-brightgreen?style=flat-square" />
 
 ---
+## 📄 Full Lab Walkthrough — Proof of Work
+
+| File | Description |
+| --- | --- |
+| [AD_Enumeration_BloodHound_SharpHound_Lab_Report.docx](./AD_Enumeration_BloodHound_SharpHound_Lab_Report.docx) | Hands-on lab walkthrough with screenshots |
 
 **Prepared by:** Bikash Raya
-**Project Type:** Active Directory Enumeration & Attack Path Analysis — BloodHound / SharpHound
+
 
 </div>
 
 ---
 
-## 📁 Repository Structure
 
-| File | Description |
-| --- | --- |
-| [AD_Enumeration_BloodHound_SharpHound_Lab_Report.pdf](./AD_Enumeration_BloodHound_SharpHound_Lab_Report.pdf) | Complete lab report with all screenshots embedded |
-| README.md | Project overview |
-
----
 
 ## 📋 Overview
 
@@ -273,6 +271,10 @@ Updated ZIP imported into BloodHound.
 > * [System Hardening Lab — Linux, Windows Server & AD](https://github.com/Bikash-Raya/system-hardening-lab-linux-windows-active-directory)
 > * [Microsoft Sentinel & Defender XDR — SOC IR Lab](https://github.com/Bikash-Raya/Sentinel-Defender-XDR-SOC-Incident-Response-lab)
 > * [Nessus Vulnerability Management Lab](https://github.com/Bikash-Raya/Nessus-Vulnerability-Management-Lab)
+
+---
+
+> 📄 Thanks for reading! For a full hands-on walkthrough of this lab with screenshots — [download the lab report here](./AD_Enumeration_BloodHound_SharpHound_Lab_Report.docx)
 
 ---
 
